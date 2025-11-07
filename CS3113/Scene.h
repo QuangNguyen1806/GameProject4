@@ -1,46 +1,36 @@
-/**
-* Author: [Your name here]
-* Assignment: Rise of the AI
-* Date due: 2025-11-08, 11:59pm
-* I pledge that I have completed this assignment without
-* collaborating with anyone else, in conformance with the
-* NYU School of Engineering Policies and Procedures on
-* Academic Misconduct.
-**/
-
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "cs3113.h"
 #include "Entity.h"
-#include "Map.h"
 
-class Scene
-{
+struct GameState {
+    Entity *soldier;              // Player character
+    Map *map;                     // Tilemap
+    Music bgm;                    // Background music
+    Sound deathSound;             // Enemy collision/death SFX
+    Sound sceneChangeSound;       // Level transition SFX
+    Sound jumpSound;              // Jump SFX
+    Camera2D camera;              // Viewport camera
+    int nextSceneID;              // Scene transition flag (0=stay, 1+=goto level)
+};
+
+class Scene {
 protected:
-    Map *mMap;
-    Entity mPlayer;
-    Entity mEnemies[3];
-    Camera2D mCamera;
-    int mEnemyCount;
-    bool mIsComplete;
-
+    GameState mGameState;
+    Vector2 mOrigin;
+    
 public:
     Scene();
+    Scene(Vector2 origin);
     virtual ~Scene();
-
-    virtual void initialize() = 0;
+    
+    virtual void initialise() = 0;
     virtual void update(float deltaTime) = 0;
     virtual void render() = 0;
-
-    bool isComplete() const { return mIsComplete; }
-    void setComplete(bool complete) { mIsComplete = complete; }
-
-    Entity *getPlayer() { return &mPlayer; }
-    Entity *getEnemies() { return mEnemies; }
-    int getEnemyCount() const { return mEnemyCount; }
-    Map *getMap() { return mMap; }
-    Camera2D *getCamera() { return &mCamera; }
+    virtual void shutdown() = 0;
+    
+    GameState getState() const { return mGameState; }
+    Vector2 getOrigin() const { return mOrigin; }
 };
 
 #endif // SCENE_H

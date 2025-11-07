@@ -1,102 +1,128 @@
 #include "Map.h"
+#include <cmath>
+#include <iostream>
 
-Map::Map(int mapColumns, int mapRows, unsigned int *levelData,
-         const char *textureFilePath, float tileSize, int textureColumns,
-         int textureRows, Vector2 origin) : 
-         mMapColumns {mapColumns}, mMapRows {mapRows}, 
-         mTextureAtlas { LoadTexture(textureFilePath) },
-         mLevelData {levelData }, mTileSize {tileSize}, 
-         mTextureColumns {textureColumns}, mTextureRows {textureRows},
-         mOrigin {origin} { build(); }
+Map::Map(int mapColumns,
+         int mapRows,
+         unsigned int* levelData,
+         const char* textureFilePath,
+         float tileSize,
+         int textureColumns,
+         int textureRows,
+         Vector2 origin)
+: mMapColumns(mapColumns)
+, mMapRows(mapRows)
+, mLevelData(levelData)
+, mTileSize(tileSize)
+, mTextureColumns(textureColumns)
+, mTextureRows(textureRows)
+, mOrigin(origin)
+, mLeftBoundary(0.0f)
+, mRightBoundary(0.0f)
+, mTopBoundary(0.0f)
+, mBottomBoundary(0.0f)
+{
+    mTextureAtlas = LoadTexture(textureFilePath);
+    if (mMapColumns <= 0 || mMapRows <= 0) {
+        std::cerr << "Map::Map - invalid dimensions\n";
+    }
+    if (mLevelData == nullptr) {
+        std::cerr << "Map::Map - warning: level data pointer is null\n";
+    }
+    build();
+}
 
-Map::~Map() { UnloadTexture(mTextureAtlas); }
+Map::~Map() {
+    UnloadTexture(mTextureAtlas);
+}
 
 void Map::build()
 {
-    // Calculate map boundaries in world coordinates
     mLeftBoundary   = mOrigin.x - (mMapColumns * mTileSize) / 2.0f;
     mRightBoundary  = mOrigin.x + (mMapColumns * mTileSize) / 2.0f;
-    mTopBoundary    = mOrigin.y - (mMapRows * mTileSize) / 2.0f;
-    mBottomBoundary = mOrigin.y + (mMapRows * mTileSize) / 2.0f;
+    mTopBoundary    = mOrigin.y - (mMapRows    * mTileSize) / 2.0f;
+    mBottomBoundary = mOrigin.y + (mMapRows    * mTileSize) / 2.0f;
 
-    // Precompute texture areas for each tile
-    for (int row = 0; row < mTextureRows; row++)
-    {
-        for (int col = 0; col < mTextureColumns; col++)
-        {
-            Rectangle textureArea = {
-                (float) col * (mTextureAtlas.width / mTextureColumns),
-                (float) row * (mTextureAtlas.height / mTextureRows),
-                (float) mTextureAtlas.width / mTextureColumns,
-                (float) mTextureAtlas.height / mTextureRows
-            };
+    mTextureAreas.clear();
+    mTextureAreas.reserve(mTextureColumns * mTextureRows);
 
-            mTextureAreas.push_back(textureArea);
+    const float cellW = static_cast<float>(mTextureAtlas.width)  / static_cast<float>(mTextureColumns);
+    const float cellH = static_cast<float>(mTextureAtlas.height) / static_cast<float>(mTextureRows);
+
+    for (int r = 0; r < mTextureRows;  r++) {
+        for (int c = 0; c < mTextureColumns; c++) {
+            Rectangle src{ c * cellW, r * cellH, cellW, cellH };
+            mTextureAreas.push_back(src);
         }
     }
 }
 
 void Map::render()
 {
-    // Draw each tile in the map
-    for (int row = 0; row < mMapRows; row++)
-    {
-        // Draw each column in the row
-        for (int col = 0; col < mMapColumns; col++)
-        {
-            // Get the tile index at the current row and column
-            int tile = mLevelData[row * mMapColumns + col];
+    const int totalCells = mTextureColumns * mTextureRows;
 
-            // If the tile index is 0, we do not draw anything
-            if (tile == 0) continue;
+    for (int row = 0; row < mMapRows; row++) {
+        for (int col = 0; col < mMapColumns; col++) {
 
-            Rectangle destinationArea = {
-                mLeftBoundary + col * mTileSize,
-                mTopBoundary  + row * mTileSize, // y-axis is inverted
-                mTileSize,
-                mTileSize
-            };
+            const int idx = row * mMapColumns + col;
+            unsigned int tile = mLevelData ? mLevelData[idx] : 0;
 
-            // Draw the tile
+            if (tile == 0) { continue; }
+
+            int local = static_cast<int>(tile) - 1;
+
+            if (local < 0 || local >= totalCells) {
+                std::cerr << "ERROR: Map::render - tile index " << tile
+                          << " (local " << local << ") out of tileset bounds (cells="
+                          << totalCells << ") at map pos (" << col << "," << row << ")\n";
+                continue;
+            }
+
+            const float worldX = mLeftBoundary + (col + 0.5f) * mTileSize;
+            const float worldY = mTopBoundary  + (row + 0.5f) * mTileSize;
+
+            Rectangle dst{ worldX, worldY, mTileSize, mTileSize };
+
             DrawTexturePro(
                 mTextureAtlas,
-                mTextureAreas[tile - 1], // -1 because tile indices start at 1
-                destinationArea,
-                {0.0f, 0.0f}, // origin
-                0.0f,         // rotation
-                WHITE         // tint
+                mTextureAreas[local],
+                dst,
+                { mTileSize / 2.0f, mTileSize / 2.0f },
+                0.0f,
+                WHITE
             );
         }
     }
 }
 
-bool Map::isSolidTileAt(Vector2 position, float *xOverlap, float *yOverlap)
+bool Map::isSolidTileAt(const Vector2& worldPoint, float* outPenX, float* outPenY) const
 {
-    *xOverlap = 0.0f;
-    *yOverlap = 0.0f;
+    const int col = static_cast<int>(std::floor((worldPoint.x - mLeftBoundary) / mTileSize));
+    const int row = static_cast<int>(std::floor((worldPoint.y - mTopBoundary)  / mTileSize));
 
-    if (position.x < mLeftBoundary || position.x > mRightBoundary ||
-        position.y < mTopBoundary  || position.y > mBottomBoundary)
+    if (col < 0 || col >= mMapColumns || row < 0 || row >= mMapRows) {
+        if (outPenX) *outPenX = 0.0f;
+        if (outPenY) *outPenY = 0.0f;
         return false;
+    }
 
-    int tileXIndex = floor((position.x - mLeftBoundary) / mTileSize);
-    int tileYIndex = floor((position.y - mTopBoundary) / mTileSize);
+    const int idx = row * mMapColumns + col;
+    const unsigned int tile = mLevelData ? mLevelData[idx] : 0;
 
-    if (tileXIndex < 0 || tileXIndex >= mMapColumns ||
-        tileYIndex < 0 || tileYIndex >= mMapRows)
+    if (tile == 0) {
+        if (outPenX) *outPenX = 0.0f;
+        if (outPenY) *outPenY = 0.0f;
         return false;
+    }
 
-    int tile = mLevelData[tileYIndex * mMapColumns + tileXIndex];
-    if (tile == 0) return false;
+    const float tileCenterX = mLeftBoundary + (col + 0.5f) * mTileSize;
+    const float tileCenterY = mTopBoundary  + (row + 0.5f) * mTileSize;
 
-    float tileCentreX = mLeftBoundary + tileXIndex * mTileSize + mTileSize / 2.0f;
-    float tileCentreY = mTopBoundary + tileYIndex * mTileSize + mTileSize / 2.0f;
+    const float dx = worldPoint.x - tileCenterX;
+    const float dy = worldPoint.y - tileCenterY;
 
-    /*
-    When our collision probe touches a solid tile, we calculate how far the probe has penetrated into that tile along each axis — this is what we call the overlap. Each tile has a center point and a known half-size (half of mTileSize). By comparing the probe’s position to the tile’s center, we find how deep the probe is inside the tile: if the distance between them is smaller than the tile’s half-size, then the probe is overlapping. The overlap value (mTileSize / 2) - fabs(position - tileCenter) tells us exactly how much to push the entity back so that it sits flush against the tile’s edge without clipping inside. We calculate this separately for both the X and Y axes, which lets us resolve collisions in either direction — for example, preventing the player from sinking into the ground or walking through walls.
-    */
-    *xOverlap = fmaxf(0.0f, (mTileSize / 2.0f) - fabs(position.x - tileCentreX));
-    *yOverlap = fmaxf(0.0f, (mTileSize / 2.0f) - fabs(position.y - tileCentreY));
+    if (outPenX) *outPenX = (mTileSize / 2.0f) - std::fabs(dx);
+    if (outPenY) *outPenY = (mTileSize / 2.0f) - std::fabs(dy);
 
     return true;
 }

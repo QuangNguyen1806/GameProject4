@@ -2,18 +2,22 @@
 #define MAP_H
 
 #include "cs3113.h"
+#include <vector>
 
-class Map
-{
+class Map {
 private:
     int mMapColumns;
     int mMapRows;
-    unsigned int *mLevelData;
+    unsigned int* mLevelData;
+
     Texture2D mTextureAtlas;
+
     float mTileSize;
     int mTextureColumns;
     int mTextureRows;
+
     std::vector<Rectangle> mTextureAreas;
+
     Vector2 mOrigin;
     float mLeftBoundary;
     float mRightBoundary;
@@ -21,28 +25,32 @@ private:
     float mBottomBoundary;
 
 public:
-    Map(int mapColumns, int mapRows, unsigned int *levelData,
-        const char *textureFilePath, float tileSize, int textureColumns,
-        int textureRows, Vector2 origin);
+    // levelData must point to mapColumns*mapRows entries
+    Map(int mapColumns,
+        int mapRows,
+        unsigned int* levelData,
+        const char* textureFilePath,
+        float tileSize,
+        int textureColumns,
+        int textureRows,
+        Vector2 origin);
+
     ~Map();
 
-    void build();
-    void render();
-    bool isSolidTileAt(Vector2 position, float *xOverlap, float *yOverlap);
+    void   build();
+    void   render();
 
-    int getMapColumns() const { return mMapColumns; }
-    int getMapRows() const { return mMapRows; }
-    float getTileSize() const { return mTileSize; }
-    unsigned int* getLevelData() const { return mLevelData; }
-    Texture2D getTextureAtlas() const { return mTextureAtlas; }
-    int getTextureColumns() const { return mTextureColumns; }
-    int getTextureRows() const { return mTextureRows; }
-    float getLeftBoundary() const { return mLeftBoundary; }
-    float getRightBoundary() const { return mRightBoundary; }
-    float getTopBoundary() const { return mTopBoundary; }
-    float getBottomBoundary() const { return mBottomBoundary; }
+    // FIX: match implementation signature and constness
+    bool   isSolidTileAt(const Vector2& position, float* xOverlap, float* yOverlap) const;
 
-    void setTileType(int index, int tileType) { mLevelData[index] = tileType; }
+    // Inline getters (keep inline here; do NOT re-define in .cpp)
+    float  getTileSize()        const { return mTileSize;        };
+    int    getMapColumns()      const { return mMapColumns;      };
+    int    getMapRows()         const { return mMapRows;         };
+    float  getLeftBoundary()    const { return mLeftBoundary;    };
+    float  getRightBoundary()   const { return mRightBoundary;   };
+    float  getTopBoundary()     const { return mTopBoundary;     };
+    float  getBottomBoundary()  const { return mBottomBoundary;  };
 };
 
-#endif // MAP_H
+#endif
