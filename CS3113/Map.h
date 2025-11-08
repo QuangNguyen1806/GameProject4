@@ -25,7 +25,6 @@ private:
     float mBottomBoundary;
 
 public:
-    // levelData must point to mapColumns*mapRows entries
     Map(int mapColumns,
         int mapRows,
         unsigned int* levelData,
@@ -36,21 +35,22 @@ public:
         Vector2 origin);
 
     ~Map();
+    void build();
+    void render();
+    int  getTileAt(Vector2 position);
+    bool isSolidTileAt(Vector2 position, float *xOverlap, float *yOverlap);
 
-    void   build();
-    void   render();
-
-    // FIX: match implementation signature and constness
-    bool   isSolidTileAt(const Vector2& position, float* xOverlap, float* yOverlap) const;
-
-    // Inline getters (keep inline here; do NOT re-define in .cpp)
-    float  getTileSize()        const { return mTileSize;        };
-    int    getMapColumns()      const { return mMapColumns;      };
-    int    getMapRows()         const { return mMapRows;         };
-    float  getLeftBoundary()    const { return mLeftBoundary;    };
-    float  getRightBoundary()   const { return mRightBoundary;   };
-    float  getTopBoundary()     const { return mTopBoundary;     };
-    float  getBottomBoundary()  const { return mBottomBoundary;  };
+    int           getMapColumns()     const { return mMapColumns;     };
+    int           getMapRows()        const { return mMapRows;        };
+    float         getTileSize()       const { return mTileSize;       };
+    unsigned int* getLevelData()      const { return mLevelData;      };
+    Texture2D     getTextureAtlas()   const { return mTextureAtlas;   };
+    int           getTextureColumns() const { return mTextureColumns; };
+    int           getTextureRows()    const { return mTextureRows;    };
+    float         getLeftBoundary()   const { return mLeftBoundary;   };
+    float         getRightBoundary()  const { return mRightBoundary;  };
+    float         getTopBoundary()    const { return mTopBoundary;    };
+    float         getBottomBoundary() const { return mBottomBoundary; };
 };
 
 #endif

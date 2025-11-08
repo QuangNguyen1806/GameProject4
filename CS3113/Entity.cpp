@@ -352,10 +352,26 @@ void Entity::update(float deltaTime, Entity *player, Map *map,
     mPosition.y += mVelocity.y * deltaTime;
     checkCollisionY(collidableEntities, collisionCheckCount);
     checkCollisionY(map);
+    
 
     mPosition.x += mVelocity.x * deltaTime;
     checkCollisionX(collidableEntities, collisionCheckCount);
     checkCollisionX(map);
+
+    if (mEntityType == NPC && map != nullptr)
+    {
+        if (mPosition.x < map->getLeftBoundary())
+        {
+            mPosition.x = map->getLeftBoundary();
+            mMovement.x = 1.0f;   // push right
+        }
+
+        if (mPosition.x > map->getRightBoundary())
+        {
+            mPosition.x = map->getRightBoundary();
+            mMovement.x = -1.0f;  // push left
+        }
+    }
 
     if (mTextureType == ATLAS && GetLength(mMovement) != 0 && mIsCollidingBottom) 
         animate(deltaTime);

@@ -110,9 +110,9 @@ void LevelC::update(float deltaTime) {
     
     if (CheckCollisionRecs(playerRect, enemyRect)) {
         PlaySound(mGameState.deathSound);
-        gLives--;
-        if (gLives <= 0) {
-            gGameOver = true;
+        mGameState.lives--;
+        if (mGameState.lives <= 0) {
+            mGameState.gameOver = true;
         } else {
             mGameState.nextSceneID = 1; // Restart LevelA
         }
@@ -122,9 +122,9 @@ void LevelC::update(float deltaTime) {
     // ===== FALL OFF WORLD CHECK =====
     if (mGameState.soldier->getPosition().y > 650.0f) {
         PlaySound(mGameState.deathSound);
-        gLives--;
-        if (gLives <= 0) {
-            gGameOver = true;
+        mGameState.lives--;
+        if (mGameState.lives <= 0) {
+            mGameState.gameOver = true;
         } else {
             mGameState.nextSceneID = 3; // Restart LevelC
         }

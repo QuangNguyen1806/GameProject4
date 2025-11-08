@@ -3,11 +3,6 @@
 
 #include "Scene.h"
 
-// External globals from main.cpp
-extern int gLives;
-extern bool gGameOver;
-extern bool gPlayerWon;
-
 class LevelBoss : public Scene {
 private:
     Entity *mBoss;

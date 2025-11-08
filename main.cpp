@@ -73,6 +73,11 @@ void initialise() {
 
     switchToScene(gLevels[0]); // Start at menu
     SetTargetFPS(FPS);
+    GameState state = gCurrentScene->getState();
+    state.lives = gLives;
+    state.gameOver = gGameOver;
+    state.playerWon = gPlayerWon;
+    gCurrentScene->setState(state);
 }
 
 void processInput() {
@@ -82,6 +87,11 @@ void processInput() {
             gGameOver = false;
             gPlayerWon = false;
             switchToScene(gLevels[1]); // Go to LevelA
+            GameState state = gCurrentScene->getState();
+            state.lives = gLives;
+            state.gameOver = gGameOver;
+            state.playerWon = gPlayerWon;
+            gCurrentScene->setState(state);
         }
     } else if (!gGameOver && !gPlayerWon) {
         // Handle player movement in levels
@@ -118,11 +128,21 @@ void update() {
         UpdateMusicStream(gCurrentScene->getState().bgm);
     }
 
+    GameState state = gCurrentScene->getState();
+    gLives = state.lives;
+    gGameOver = state.gameOver;
+    gPlayerWon = state.playerWon;
+
     // Fixed timestep loop
     while (gTimeAccumulator >= FIXED_TIMESTEP) {
         if (gCurrentScene && !gGameOver && !gPlayerWon) {
             gCurrentScene->update(FIXED_TIMESTEP);
         }
+
+        GameState state = gCurrentScene->getState();
+        gLives = state.lives;
+        gGameOver = state.gameOver;
+        gPlayerWon = state.playerWon;
 
         // Handle scene transitions via nextSceneID
         if (gCurrentScene != nullptr) {
@@ -131,6 +151,11 @@ void update() {
                 // Check bounds
                 if (nextSceneID < (int)gLevels.size()) {
                     switchToScene(gLevels[nextSceneID]);
+                    GameState newState = gCurrentScene->getState();
+                    newState.lives = gLives;
+                    newState.gameOver = gGameOver;
+                    newState.playerWon = gPlayerWon;
+                    gCurrentScene->setState(newState);
                 } else if (nextSceneID == 5) {
                     // Win condition - beat all levels
                     gPlayerWon = true;

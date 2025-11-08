@@ -3,10 +3,6 @@
 
 #include "Scene.h"
 
-// External globals from main.cpp
-extern int gLives;
-extern bool gGameOver;
-
 class LevelA : public Scene {
 private:
     Entity *mEnemyEntity;

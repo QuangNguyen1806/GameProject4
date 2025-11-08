@@ -123,7 +123,7 @@ if (CheckCollisionRecs(playerRect, bossRect)) {
         if (mBossHealth <= 0) {
             mBossDefeated = true;
             PlaySound(mGameState.sceneChangeSound);
-            gPlayerWon = true;
+            mGameState.playerWon = true;
             return;
         }
     }
@@ -134,9 +134,9 @@ if (CheckCollisionRecs(playerRect, bossRect)) {
 if (mGameState.soldier->getPosition().y >= mBoss->getPosition().y) {
     if (CheckCollisionRecs(playerRect, bossRect)) {
         PlaySound(mGameState.deathSound);
-        gLives--;
-        if (gLives <= 0) {
-            gGameOver = true;
+        mGameState.lives--;
+        if (mGameState.lives <= 0) {
+            mGameState.gameOver = true;
         } else {
             mGameState.nextSceneID = 4; // Restart boss level
         }
@@ -148,9 +148,9 @@ if (mGameState.soldier->getPosition().y >= mBoss->getPosition().y) {
     // ===== FALL OFF WORLD CHECK =====
     if (mGameState.soldier->getPosition().y > 650.0f) {
         PlaySound(mGameState.deathSound);
-        gLives--;
-        if (gLives <= 0) {
-            gGameOver = true;
+        mGameState.lives--;
+        if (mGameState.lives <= 0) {
+            mGameState.gameOver = true;
         } else {
             mGameState.nextSceneID = 4; // Restart boss level
         }

@@ -12,6 +12,9 @@ struct GameState {
     Sound jumpSound;              // Jump SFX
     Camera2D camera;              // Viewport camera
     int nextSceneID;              // Scene transition flag (0=stay, 1+=goto level)
+    int lives = 3;
+    bool gameOver = false;
+    bool playerWon = false;
 };
 
 class Scene {
@@ -30,6 +33,7 @@ public:
     virtual void shutdown() = 0;
     
     GameState getState() const { return mGameState; }
+    void setState(GameState state) { mGameState = state; }
     Vector2 getOrigin() const { return mOrigin; }
 };
 
