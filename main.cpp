@@ -17,7 +17,7 @@
 // Global Constants
 constexpr int SCREEN_WIDTH = 1000;
 constexpr int SCREEN_HEIGHT = 600;
-constexpr int FPS = 120;
+constexpr int FPS = 60;
 constexpr int NUMBER_OF_LEVELS = 4;
 constexpr Vector2 ORIGIN = { SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f };
 constexpr float FIXED_TIMESTEP = 1.0f / 60.0f;

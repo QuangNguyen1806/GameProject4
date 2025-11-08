@@ -1,16 +1,4 @@
-/**
-* Author: Quang Nguyen
-* Assignment: Rise of the AI
-* Date due: 2025-11-08, 11:59pm
-* I pledge that I have completed this assignment without
-* collaborating with anyone else, in conformance with the
-* NYU School of Engineering Policies and Procedures on
-* Academic Misconduct.
-**/
-
 #include "Entity.h"
-
-#include <cmath>
 
 // Default constructor
 Entity::Entity()
@@ -86,10 +74,10 @@ Vector2 spriteSheetDimensions, std::map<Direction, std::vector<int>> animationAt
   mScale{ scale },
   mColliderDimensions{ scale },
   mTexture{ LoadTexture(textureFilepath) },
-  mTextureType{ animationAtlas.empty() ? SINGLE : ATLAS },  // FIX: Only ATLAS if map has data
+  mTextureType{ animationAtlas.empty() ? SINGLE : ATLAS }, 
   mSpriteSheetDimensions{ spriteSheetDimensions },
   mAnimationAtlas{ animationAtlas },
-  mAnimationIndices{ animationAtlas.empty() ? std::vector<int>{} : animationAtlas.at(RIGHT) },  // FIX: Check if empty
+  mAnimationIndices{ animationAtlas.empty() ? std::vector<int>{} : animationAtlas.at(RIGHT) }, 
   mDirection{ RIGHT },
   mFrameSpeed{ DEFAULT_FRAME_SPEED },
   mCurrentFrameIndex{ 0 },
@@ -106,81 +94,8 @@ Vector2 spriteSheetDimensions, std::map<Direction, std::vector<int>> animationAt
   mEntityType{ entityType },
   mAIType{ WANDERER },
   mAIState{ IDLE }
-{
-}
+{}
 
-// Move constructor: steal resources
-Entity::Entity(Entity&& other) noexcept
-{
-    // move simple PODs
-    *this = std::move(other); // forward to move assignment for brevity
-}
-
-// Move assignment: steal texture id and other resources, zero out source
-Entity& Entity::operator=(Entity&& other) noexcept
-{
-    if (this == &other) return *this;
-
-    // shallow/move copy PODs and complex members
-    mPosition = other.mPosition;
-    mMovement = other.mMovement;
-    mVelocity = other.mVelocity;
-    mAcceleration = other.mAcceleration;
-    mScale = other.mScale;
-    mColliderDimensions = other.mColliderDimensions;
-
-    // steal texture handle (so only one destructor will UnloadTexture)
-    mTexture = other.mTexture;
-    other.mTexture = { 0, 0, 0, 0, 0 }; // clear source to avoid double-unload
-
-    mTextureType = other.mTextureType;
-    mSpriteSheetDimensions = other.mSpriteSheetDimensions;
-    mAnimationAtlas = std::move(other.mAnimationAtlas);
-    mAnimationIndices = std::move(other.mAnimationIndices);
-    mDirection = other.mDirection;
-    mFrameSpeed = other.mFrameSpeed;
-    mCurrentFrameIndex = other.mCurrentFrameIndex;
-    mAnimationTime = other.mAnimationTime;
-    mIsJumping = other.mIsJumping;
-    mJumpingPower = other.mJumpingPower;
-    mSpeed = other.mSpeed;
-    mAngle = other.mAngle;
-    mIsCollidingTop = other.mIsCollidingTop;
-    mIsCollidingBottom = other.mIsCollidingBottom;
-    mIsCollidingRight = other.mIsCollidingRight;
-    mIsCollidingLeft = other.mIsCollidingLeft;
-    mEntityStatus = other.mEntityStatus;
-    mEntityType = other.mEntityType;
-    mAIType = other.mAIType;
-    mAIState = other.mAIState;
-
-    // clear other to a safe state
-    other.mPosition = {0.0f, 0.0f};
-    other.mMovement = {0.0f, 0.0f};
-    other.mVelocity = {0.0f, 0.0f};
-    other.mAcceleration = {0.0f, 0.0f};
-    other.mScale = {0.0f, 0.0f};
-    other.mColliderDimensions = {0.0f, 0.0f};
-    other.mTextureType = SINGLE;
-    other.mSpriteSheetDimensions = {0.0f, 0.0f};
-    other.mAnimationAtlas.clear();
-    other.mAnimationIndices.clear();
-    other.mDirection = RIGHT;
-    other.mFrameSpeed = DEFAULT_FRAME_SPEED;
-    other.mCurrentFrameIndex = 0;
-    other.mAnimationTime = 0.0f;
-    other.mIsJumping = false;
-    other.mJumpingPower = 0.0f;
-    other.mSpeed = DEFAULT_SPEED;
-    other.mAngle = 0.0f;
-    other.mIsCollidingTop = other.mIsCollidingBottom = other.mIsCollidingRight = other.mIsCollidingLeft = false;
-    other.mEntityStatus = INACTIVE;
-    other.mEntityType = NONE;
-    other.mAIType = WANDERER;
-    other.mAIState = IDLE;
-
-    return *this;
-}
 
 Entity::~Entity() {
     // Only unload if texture has a valid id
@@ -196,7 +111,6 @@ void Entity::checkCollisionY(Entity *collidableEntities, int collisionCheckCount
     for (int i = 0; i < collisionCheckCount; i++) {
         Entity *collidableEntity = &collidableEntities[i];
 
-        // Skip self - prevents immediate self-collision.
         if (collidableEntity == this) continue;
 
         if (isColliding(collidableEntity)) {
@@ -223,7 +137,6 @@ void Entity::checkCollisionX(Entity *collidableEntities, int collisionCheckCount
     for (int i = 0; i < collisionCheckCount; i++) {
         Entity *collidableEntity = &collidableEntities[i];
 
-        // Skip self - prevents immediate self-collision.
         if (collidableEntity == this) continue;
 
         if (isColliding(collidableEntity)) {
@@ -343,50 +256,32 @@ void Entity::animate(float deltaTime) {
     }
 }
 
-void Entity::AIWander() {
-    if (mAIState == IDLE) {
-        int randomAction = GetRandomValue(0, 100);
-
-        if (randomAction < 5) {
-            mAIState = WALKING;
-
-            int randomDirection = GetRandomValue(0, 1);
-            if (randomDirection == 0) {
-                mMovement.x = -1.0f;
-                mDirection = LEFT;
-            } else {
-                mMovement.x = 1.0f;
-                mDirection = RIGHT;
-            }
-        }
-    } else if (mAIState == WALKING) {
-        int randomStop = GetRandomValue(0, 100);
-
-        if (randomStop < 3) {
-            mAIState = IDLE;
-            mMovement.x = 0.0f;
-        }
+void Entity::AIWander() { 
+    if (mDirection == LEFT){
+        moveLeft();
+    }
+    else{
+        moveRight();
     }
 }
 
-void Entity::AIFollow(Entity *target) {
-    if (target == nullptr) return;
+void Entity::AIFollow(Entity *target)
+{
+    switch (mAIState)
+    {
+    case IDLE:
+        if (Vector2Distance(mPosition, target->getPosition()) < 250.0f) 
+            mAIState = WALKING;
+        break;
 
-    float distance = fabsf(mPosition.x - target->mPosition.x);
-
-    if (distance > 10.0f) {
-        if (mPosition.x < target->mPosition.x) {
-            mMovement.x = 1.0f;
-            mDirection = RIGHT;
-        } else {
-            mMovement.x = -1.0f;
-            mDirection = LEFT;
-        }
-
-        mAIState = FOLLOWING;
-    } else {
-        mMovement.x = 0.0f;
-        mAIState = IDLE;
+    case WALKING:
+        // Depending on where the player is in respect to their x-position
+        // Change direction of the enemy
+        if (mPosition.x > target->getPosition().x) moveLeft();
+        else                                       moveRight();
+    
+    default:
+        break;
     }
 }
 
@@ -420,8 +315,6 @@ void Entity::AIFly(Entity *target) {
 }
 
 void Entity::AIActivate(Entity *target) {
-    if (mEntityType != NPC) return;
-
     switch (mAIType) {
         case WANDERER: AIWander(); break;
         case FOLLOWER: AIFollow(target); break;
@@ -430,114 +323,116 @@ void Entity::AIActivate(Entity *target) {
     }
 }
 
-void Entity::update(float deltaTime, Entity *player, Map *map, Entity *collidableEntities, int collisionCheckCount) {
-    if (!isActive()) return;
+void Entity::update(float deltaTime, Entity *player, Map *map, 
+    Entity *collidableEntities, int collisionCheckCount)
+{
+    if (mEntityStatus == INACTIVE) return;
+    
+    if (mEntityType == NPC) AIActivate(player);
 
-    // Reset collider flags at the start of update so they are visible to ProcessInput() next frame
     resetColliderFlags();
 
-    // Apply gravity
+    if (mEntityType == NPC && mAIType == FLYER) mVelocity.y = mMovement.y * mSpeed;
+    if (mEntityType == PLAYER && mMovement.x == 0.0f) mVelocity.x = 0.0f;
+    mVelocity.x = mMovement.x * mSpeed;
+
+    mVelocity.x += mAcceleration.x * deltaTime;
     mVelocity.y += mAcceleration.y * deltaTime;
 
-    if (mEntityType == NPC && player != nullptr) {
-        AIActivate(player);
-    }
-
-    // NOW calculate velocity based on movement (which was set by ProcessInput for player, or AIActivate for NPC)
-    if (mEntityType == PLAYER) {
-        if (mMovement.x != 0.0f) mVelocity.x = mMovement.x * (float)mSpeed;
-        else mVelocity.x = 0.0f;
-    } else if (mEntityType == NPC) {
-        // For regular enemies (WANDERER, FOLLOWER)
-        if (mMovement.x != 0.0f) mVelocity.x = mMovement.x * (float)mSpeed;
-        else mVelocity.x = 0.0f;
-
-        // For FLYER, also handle Y velocity
-        if (mAIType == FLYER) {
-            if (mMovement.y != 0.0f) mVelocity.y = mMovement.y * (float)mSpeed;
-            else mVelocity.y = 0.0f;
-        }
-    }
-
-    // Update position with velocity
-    mPosition.x += mVelocity.x * deltaTime;
-    mPosition.y += mVelocity.y * deltaTime;
-
-    // Check collisions with map
-    checkCollisionX(map);
-    if (collidableEntities != nullptr && collisionCheckCount > 0) checkCollisionX(collidableEntities, collisionCheckCount);
-
-    checkCollisionY(map);
-    if (collidableEntities != nullptr && collisionCheckCount > 0) checkCollisionY(collidableEntities, collisionCheckCount);
-
-    // Handle jumping
-    if (mIsJumping && mIsCollidingBottom && mEntityType == PLAYER) {
-        mVelocity.y = -mJumpingPower;
+    // ––––– JUMPING ––––– //
+    if (mIsJumping)
+    {
+        // STEP 1: Immediately return the flag to its original false state
         mIsJumping = false;
+        
+        // STEP 2: The player now acquires an upward velocity
+        mVelocity.y -= mJumpingPower;
     }
 
-    // Boundary wrapping for NPC entities (keeps enemies in bounds)
-    if (mEntityType == NPC && map != nullptr) {
-        if (mPosition.x < map->getLeftBoundary()) {
-            mPosition.x = map->getLeftBoundary() + 50.0f;
-            mMovement.x = 1.0f; // Force rightward
-        }
+    mPosition.y += mVelocity.y * deltaTime;
+    checkCollisionY(collidableEntities, collisionCheckCount);
+    checkCollisionY(map);
 
-        if (mPosition.x > map->getRightBoundary()) {
-            mPosition.x = map->getRightBoundary() - 50.0f;
-            mMovement.x = -1.0f; // Force leftward
-        }
-    }
+    mPosition.x += mVelocity.x * deltaTime;
+    checkCollisionX(collidableEntities, collisionCheckCount);
+    checkCollisionX(map);
 
-    // Deactivate if fallen off map
-    if (map != nullptr && mPosition.y > map->getBottomBoundary() + 100.0f) {
-        deactivate();
-    }
+    if (mTextureType == ATLAS && GetLength(mMovement) != 0 && mIsCollidingBottom) 
+        animate(deltaTime);
 
-    animate(deltaTime);
-
-    if (mEntityType == NPC) {
-        resetMovement();
-    } else if (mEntityType == PLAYER) {
-        resetMovement();
-    }
+    if (mEntityType == PLAYER) mMovement.x = 0.0f;
 }
 
-void Entity::render() {
-    if (!isActive()) return;
 
-    if (mTextureType == SINGLE) {
-        DrawTexturePro(
-            mTexture,
-            { 0.0f, 0.0f, (float)mTexture.width, (float)mTexture.height },
-            { mPosition.x, mPosition.y, mScale.x, mScale.y },
-            { mScale.x / 2.0f, mScale.y / 2.0f },
-            mAngle,
-            WHITE
-        );
-    } else if (mTextureType == ATLAS && !mAnimationIndices.empty()) {
-        Rectangle source = getUVRectangle(&mTexture, mAnimationIndices[mCurrentFrameIndex],
-                                         (int)mSpriteSheetDimensions.y, (int)mSpriteSheetDimensions.x);
+void Entity::render()
+{
+    if(mEntityStatus == INACTIVE) return;
 
-        if (mDirection == LEFT) source.width = -source.width;
+    Rectangle textureArea;
 
-        DrawTexturePro(
-            mTexture,
-            source,
-            { mPosition.x, mPosition.y, mScale.x, mScale.y },
-            { mScale.x / 2.0f, mScale.y / 2.0f },
-            mAngle,
-            WHITE
-        );
+    switch (mTextureType)
+    {
+        case SINGLE:
+            // Whole texture (UV coordinates)
+            textureArea = {
+                // top-left corner
+                0.0f, 0.0f,
+
+                // bottom-right corner (of texture)
+                static_cast<float>(mTexture.width),
+                static_cast<float>(mTexture.height)
+            };
+            break;
+        case ATLAS:
+            textureArea = getUVRectangle(
+                &mTexture, 
+                mAnimationIndices[mCurrentFrameIndex], 
+                mSpriteSheetDimensions.x, 
+                mSpriteSheetDimensions.y
+            );
+        
+        default: break;
     }
+
+    // Destination rectangle – centred on gPosition
+    Rectangle destinationArea = {
+        mPosition.x,
+        mPosition.y,
+        static_cast<float>(mScale.x),
+        static_cast<float>(mScale.y)
+    };
+
+    // Origin inside the source texture (centre of the texture)
+    Vector2 originOffset = {
+        static_cast<float>(mScale.x) / 2.0f,
+        static_cast<float>(mScale.y) / 2.0f
+    };
+
+    // Render the texture on screen
+    DrawTexturePro(
+        mTexture, 
+        textureArea, destinationArea, originOffset,
+        mAngle, WHITE
+    );
+
+    // displayCollider();
 }
 
-void Entity::displayCollider() {
-    DrawRectangle(
-        (int)(mPosition.x - mColliderDimensions.x / 2.0f),
-        (int)(mPosition.y - mColliderDimensions.y / 2.0f),
-        (int)mColliderDimensions.x,
-        (int)mColliderDimensions.y,
-        GREEN
+void Entity::displayCollider() 
+{
+    // draw the collision box
+    Rectangle colliderBox = {
+        mPosition.x - mColliderDimensions.x / 2.0f,  
+        mPosition.y - mColliderDimensions.y / 2.0f,  
+        mColliderDimensions.x,                        
+        mColliderDimensions.y                        
+    };
+
+    DrawRectangleLines(
+        colliderBox.x,      // Top-left X
+        colliderBox.y,      // Top-left Y
+        colliderBox.width,  // Width
+        colliderBox.height, // Height
+        GREEN               // Color
     );
 }

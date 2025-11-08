@@ -3,7 +3,7 @@
 
 #include "Map.h"
 
-enum Direction { LEFT, UP, RIGHT, DOWN }; // For walking
+enum Direction { LEFT, UP, RIGHT, DOWN }; 
 enum EntityStatus { ACTIVE, INACTIVE };
 enum EntityType { PLAYER, BLOCK, PLATFORM, NPC, NONE };
 enum AIType { WANDERER, FOLLOWER, FLYER };
@@ -77,14 +77,6 @@ public:
            EntityType entityType);
 
     ~Entity();
-
-    // disable copying (shallow copy would duplicate a Texture2D handle and cause double-unload)
-    Entity(const Entity&) = delete;
-    Entity& operator=(const Entity&) = delete;
-
-    // enable move semantics (to transfer ownership of texture)
-    Entity(Entity&& other) noexcept;
-    Entity& operator=(Entity&& other) noexcept;
 
     void update(float deltaTime, Entity *player, Map *map,
                 Entity *collidableEntities, int collisionCheckCount);
